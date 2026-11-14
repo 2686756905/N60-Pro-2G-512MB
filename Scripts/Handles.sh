@@ -61,4 +61,3 @@ fi
 
 # 3. 强制写入 opkg 包管理器参数（双重保险，防止被覆盖）
 echo "CONFIG_USE_APK=n" >> .config
-echo "CONFIG_PACKAGE_opkg=y" >> .config
