@@ -7,4 +7,3 @@ CONFIG_TARGET_DEVICE_PACKAGES_mediatek_filogic_DEVICE_netcore_n60-pro=""
 
 # 2. 【核心】切换包管理器为 opkg (支持 ipk)
 CONFIG_USE_APK=n
-CONFIG_PACKAGE_opkg=y
