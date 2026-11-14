@@ -45,19 +45,43 @@ FIX "mini-diskmanager" "$PACKAGE_PATH/luci-app-mini-diskmanager" sed -i "s/servi
 FIX "natmapt" "$PACKAGE_PATH/luci-app-natmapt" sed -i "s/network/services/g" \
 	"$PACKAGE_PATH/luci-app-natmapt/root/usr/share/luci/menu.d/luci-app-natmap.json"
 	
+# ==========================================
 # 1. 修复框架自带的权限报错
+# ==========================================
 chmod +x /home/runner/work/*/*/.github/scripts/collect-build-reports.sh 2>/dev/null || true
 
+# ==========================================
 # 2. 磊科 N60 Pro 硬改适配：2G 内存 + 506.5M UBI
+# ==========================================
 DTS_FILE="target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts"
+
 if [ -f "$DTS_FILE" ]; then
     echo "开始修改 N60 Pro 设备树..."
+    # 修改内存为 2GB (0x80000000)
     sed -i 's/reg = <0 0x40000000 0 0x20000000>;/reg = <0 0x40000000 0 0x80000000>;/' "$DTS_FILE"
+    # 修改 UBI 分区大小为 506.5M (0x1FA80000)
     sed -i '/label = "ubi"/ { n; s/reg = <[^>]*>;/reg = <0x580000 0x1FA80000>;/ }' "$DTS_FILE"
     echo "✅ N60 Pro DTS 修改完成（2G RAM + 506.5M UBI）"
 else
     echo "❌ 警告：未找到 DTS 文件，请检查源码路径！"
 fi
 
-# 3. 强制写入 opkg 包管理器参数（双重保险，防止被覆盖）
-echo "CONFIG_USE_APK=n" >> .config
+# ==========================================
+# 3. 强制写入内核 BTF 与剔除插件参数 (双重保险，防止被覆盖)
+# ==========================================
+echo "CONFIG_KERNEL_DEBUG_INFO=y" >> .config
+echo "CONFIG_KERNEL_DEBUG_INFO_BTF=y" >> .config
+echo "CONFIG_KERNEL_DEBUG_INFO_REDUCED=n" >> .config
+echo "CONFIG_DWARVES=y" >> .config
+
+echo "# CONFIG_PACKAGE_luci-app-samba4 is not set" >> .config
+echo "# CONFIG_PACKAGE_luci-app-ksmbd is not set" >> .config
+echo "# CONFIG_PACKAGE_luci-app-wolultra is not set" >> .config
+echo "# CONFIG_PACKAGE_luci-app-gecoosac is not set" >> .config
+echo "# CONFIG_PACKAGE_luci-app-homeproxy is not set" >> .config
+
+# ==========================================
+# 4. 拉取 Honk 源码
+# ==========================================
+echo "正在拉取 honk 源码..."
+git clone --depth=1 https://github.com/kenzok8/openwrt-honk.git package/openwrt-honk
